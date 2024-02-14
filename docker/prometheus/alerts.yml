@@ -1,0 +1,73 @@
+groups:
+  - name: alert_rules
+    rules:
+      - alert: NoPhpFpmWorkersAvailable
+        expr: php_fpm_idle_workers == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No free PHP-FPM workers available"
+          description: "All PHP-FPM workers are busy, and no idle workers are available to handle new requests."
+
+      - alert: HighMysqlSlowQueryRate
+        expr: rate(mysql_global_status_slow_queries[5m]) > 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate of slow queries in MySQL"
+          description: "The MySQL server has a rate of more than 3 slow queries per minute."
+
+      - alert: ElasticsearchHealthRed
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch health is Red"
+          description: "The Elasticsearch instance reports a 'Red' health status."
+
+      - alert: PhpFpmDown
+        expr: phpfpm_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PHP-FPM is down"
+          description: "The PHP-FPM service is not reachable."
+
+      - alert: MysqlDown
+        expr: mysql_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "MySQL is down"
+          description: "The MySQL service is not reachable."
+
+      - alert: ElasticClusterDown
+        expr: elasticsearch_clusterinfo_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch cluster is down"
+          description: "The scrape of Elasticsearch cluster information was unsuccessful for more than 1 minute, the cluster might be down or inaccessible."
+
+      - alert: NginxDown
+        expr: nginx_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Nginx is down"
+          description: "The Nginx service is not reachable."
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The Redis service is not reachable."

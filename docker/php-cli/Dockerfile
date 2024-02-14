@@ -1,0 +1,77 @@
+FROM php:8.1-cli
+
+ENV PHP_MEMORY_LIMIT 2G
+ENV PHP_ENABLE_XDEBUG false
+ENV MAGENTO_ROOT /var/www/magento
+
+# Install dependencies
+RUN apt-get update \
+  && apt-get install -y \
+     # dependency for gd
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    zlib1g-dev \
+    libpng-dev \
+     # dependency for intl
+    icu-devtools \
+    libicu-dev \
+     # dependency for xsl
+    libxslt1-dev \
+     # dependency for zip
+    libzip-dev \
+    sudo \
+    cron \
+    rsyslog \
+    git \
+    procps \
+    vim \
+    sendmail
+
+RUN docker-php-ext-install \
+  bcmath \
+  intl \
+  pdo_mysql \
+  soap \
+  xsl \
+  zip \
+  sockets
+
+# Get composer installed to /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+ADD etc/php-cli.ini $PHP_INI_DIR/conf.d/zz-php.ini
+
+ARG PHP_NODE_NPM_HOME=/var/www/.npm
+ARG PHP_NODE_NPM_CONFIG=/var/www/.config
+ENV PHP_NODE_NPM_HOME ${PHP_NODE_NPM_HOME}
+ENV PHP_NODE_NPM_CONFIG ${PHP_NODE_NPM_CONFIG}
+RUN mkdir -p $PHP_NODE_NPM_HOME $PHP_NODE_NPM_CONFIG
+
+ADD bin/* /usr/local/bin/
+
+RUN ["chmod", "+x", "/usr/local/bin/run-cron"]
+
+RUN groupadd -g 1000 magento
+RUN useradd --no-log-init -d /home/magento -s /bin/bash -u 1000 -g 1000 magento
+RUN echo "magento:magento" | chpasswd && adduser magento sudo
+
+RUN mkdir -p /home/magento
+RUN mkdir -p /var/www/magento
+RUN mkdir -p /var/www/.composer
+RUN chown -R magento:magento /home/magento
+RUN chown -R magento:magento /var/www/magento
+RUN chown -R magento:magento /var/www/.composer
+RUN chown -R magento:magento $PHP_NODE_NPM_HOME
+RUN chown -R magento:magento $PHP_NODE_NPM_CONFIG
+RUN chown -R magento:magento /usr/local/etc
+
+ADD cron/magento /etc/cron.d/magento
+RUN chown magento:magento /etc/cron.d/magento
+RUN chmod u+s /usr/sbin/cron
+RUN touch /var/log/cron.log
+RUN chown magento:magento /var/log/cron.log
+RUN crontab -u magento /etc/cron.d/magento
+
+USER magento
+
+CMD ["php-fpm", "-F"]

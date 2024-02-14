@@ -1,0 +1,32 @@
+#!/bin/bash
+
+[[ "${DEBUG}" =~ ^(true|on|1)$ ]] && set -x
+
+set -e
+
+MAGE_CONFIG_FILE="$MAGENTO_ROOT/app/etc/env.php"
+if [ -f $MAGE_CONFIG_FILE ]; then
+   echo "Remove $MAGE_CONFIG_FILE"
+   rm $MAGE_CONFIG_FILE
+fi
+
+composer --no-interaction --prefer-dist --working-dir=$MAGENTO_ROOT install
+
+if [[ "${MAGENTO_RUN_MODE}" =~ ^(developer)$ ]]; then
+    rm -rf ${MAGENTO_ROOT}/generated/*
+fi
+
+echo "Cleanup var/view_preprocessed folder"
+rm -fr $MAGENTO_ROOT/var/view_preprocessed 2> /dev/null || true
+
+echo "Cleanup pub/static folder"
+rm -fr $MAGENTO_ROOT/pub/static/* 2> /dev/null || true
+
+if [[ "${MAGENTO_RUN_MODE}" =~ ^(production)$ ]]; then
+    echo "Generate PHP interceptors"
+    magento setup:di:compile
+    echo ""
+    echo "Build static files of the theme in production mode"
+    echo ""
+    magento setup:static-content:deploy -f
+fi

@@ -1,0 +1,29 @@
+Docker Infrastructure Challange
+
+Your task is to create an infrastructure with docker compose help that able to support the system in such configuration:
+
+1. MySQL database server (8x)
+2. PHP-FPM (8.1)
+3. NGINX
+4. Varnish Cache
+5. Redis
+6. ElasticSearch instance
+7. RabbitMQ instance
+
+7. Prometheus
+8. Alert Manager
+9. Grafana dashboard
+10-.. . Prometheus exporters for mysql, php-fpm, varnihs, nginx, redis, elastic
+
+
+You should be able to run magento 2.4.x instance using this infrastructure. You should configure performance statistics aggregation with Prometheus help. You need to collect performance characreristics for: mysql database, php-fpm, nginx, redis, elastic, varnish. You need to preconfigure grafana with dashboards for listed services.
+
+Instance parameters: domain name to serve, grafana dashboard access (external) port. 
+
+Prometheus data, mysql database, files, elastic instance data should survive instance recreation (e.g. docker compose down && docker compose up -d).
+
+You need to configure Alerts when: 
+1. One of the monitored service is went down.
+2. No free php-fpm workers available
+3. MySQL server has too high slow query rate (more than 3/minute, for example)
+4. Elastic Search instance health is "Red"

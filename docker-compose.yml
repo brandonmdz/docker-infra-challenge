@@ -1,0 +1,225 @@
+version: "3.8"
+services:
+  varnish:
+    container_name: varnish
+    build:
+      context: ./docker/varnish/
+    ports:
+      - 6081:6081
+
+  redis:
+    container_name: redis
+    command: redis-server --appendonly no --maxmemory-policy allkeys-lru --maxmemory 500mb --loglevel verbose
+    restart: always
+    image: redis:latest
+    hostname: redis.${DOMAIN_NAME}
+    ports:
+      - 127.0.0.1:6379:6379
+
+  elastic:
+    container_name: elastic
+    build:
+      context: ./docker/elasticsearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+    ports:
+      - 9200:9200
+
+  nginx:
+    container_name: nginx
+    build:
+      context: ./docker/nginx/
+    working_dir: /etc/nginx
+    ports:
+      - 80:80
+      - 443:443
+      - 8001:8001 # varnish
+      - 8002:8002 # metrics
+    volumes:
+      - ./magento:/var/www/magento
+    env_file:
+      - ./.env
+
+  magento:
+    container_name: magento
+    hostname: fpm.${DOMAIN_NAME}
+    build:
+      context: ./docker/php-fpm/
+    volumes:
+      - ./magento:/var/www/magento
+      - ./docker/volume/.composer:/home/magento/.composer
+    extra_hosts:
+      - "${DOMAIN_NAME}:${LOCAL_HOST_IP}"
+    env_file:
+      - ./composer.env
+      - ./.env
+      - ./config.env
+    environment:
+      - XDEBUG_CONFIG=idekey=PHPSTORM
+      - PHP_IDE_CONFIG=serverName=${DOMAIN_NAME}
+
+  mysql:
+    container_name: mysql
+    build:
+      context: ./docker/mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./docker/volume/mysql:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+
+  magento_cli:
+    container_name: magento_cli
+    build:
+      context: ./docker/php-cli/
+    hostname: cli.${DOMAIN_NAME}
+    volumes:
+      - ./docker/volume/.composer/cache:/root/.composer/cache
+      - ./magento:/var/www/magento
+    env_file:
+      - ./composer.env
+      - ./config.env
+      - ./.env
+
+  magento_cron:
+    container_name: magento_cron
+    build:
+      context: ./docker/php-cli/
+    hostname: magento2-cron.docker
+    command: run-cron
+    environment:
+      - ENABLE_SENDMAIL=true
+    volumes:
+      - ./magento:/var/www/magento
+    env_file:
+      - ./composer.env
+      - ./config.env
+      - ./.env
+
+  rabbit:
+    container_name: rabbitmq
+    build:
+      context: ./docker/rabbitmq
+    image: rabbitmq:latest
+    hostname: rabbit.${DOMAIN_NAME}
+    ports:
+      - 15672:15672
+      - 5672:5672
+    expose:
+      - 15672
+      - 5672
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    env_file:
+      - ./.env
+
+  prometheus:
+    container_name: prometheus
+    build:
+      context: ./docker/prometheus/
+    volumes:
+      - prometheus_data:/prometheus
+    ports:
+      - '9090:9090'
+
+  alertmanager:
+    container_name: alertmanager
+    build:
+      context: ./docker/alertmanager/
+    volumes:
+      - alertmanager_data:/alertmanager
+    ports:
+      - '9093:9093'
+    env_file:
+      - ./.env
+
+  grafana:
+    container_name: grafana
+    build:
+      context: ./docker/grafana/
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./.env
+
+  mysql_exporter:
+    container_name: mysql_exporter
+    image: prom/mysqld-exporter
+    command:
+     - "--mysqld.username=${MYSQL_EXPORTER_CREDENTIALS}"
+     - "--mysqld.address=mysql:3306"
+     - '--collect.info_schema.query_response_time'
+    ports:
+      - '9104:9104'
+    depends_on:
+      - mysql
+    env_file:
+      - ./.env
+
+  nginx_exporter:
+    container_name: nginx_exporter
+    image: nginx/nginx-prometheus-exporter
+    command:
+    - -nginx.scrape-uri
+    - http://nginx:8002/metrics
+    ports:
+      - '9113:9113'
+    depends_on:
+      - nginx
+  
+  php_fpm_exporter:
+    container_name: php_fpm_exporter
+    image: hipages/php-fpm_exporter
+    ports:
+      - '9253:9253'
+    environment:
+      PHP_FPM_SCRAPE_URI: "tcp://magento:9000/status"
+      PHP_FPM_LOG_LEVEL: "debug"
+      PHP_FPM_FIX_PROCESS_COUNT: "true"
+    depends_on:
+      - magento
+
+  redis_exporter:
+    container_name: redis_exporter
+    image: oliver006/redis_exporter
+    ports:
+    - '9121:9121'
+    environment:
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+
+  elastic_exporter:
+    container_name: elastic_exporter
+    image: quay.io/prometheuscommunity/elasticsearch-exporter:latest
+    command:
+     - '--es.uri=http://elastic:9200'
+    restart: always
+    ports:
+    - "9114:9114"
+    depends_on:
+      - elastic
+
+volumes:
+  elasticsearch: 
+  rabbitmq:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
+  mattermost-db:

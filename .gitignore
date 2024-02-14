@@ -1,0 +1,12 @@
+.idea
+/.env
+/composer.env
+/magento
+!/magento/.gitkeep
+/docker/nginx/etc/certs/
+!/docker/nginx/etc/certs/*.dist
+!/docker/nginx/etc/certs/.gitkeep
+/docker/volume/.composer/
+!/docker/volume/.composer/.gitkeep
+/docker/volume/mysql/
+!/docker/volume/mysql/.gitkeep

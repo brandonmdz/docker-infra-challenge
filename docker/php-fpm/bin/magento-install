@@ -1,0 +1,90 @@
+#!/bin/bash
+
+[[ "${DEBUG}" =~ ^(true|on|1)$ ]] && set -x
+
+set -e
+
+if [[ "${MAGENTO_RUN_MODE}" =~ ^(production)$ ]]; then
+    echo "It's not recommended to install magento in production mode."
+    echo "Better install in developer mode and then switch to production."
+    exit
+fi
+
+echo "Install Magento"
+MAGENTO_INSTALL="magento setup:install \
+    --key=$MAGENTO_APP_SECRET \
+    --db-host=$MAGENTO_APP_DB_HOST \
+    --db-name=$MAGENTO_APP_DB_NAME \
+    --db-user=$MAGENTO_APP_DB_USER \
+    --db-password=$MAGENTO_APP_DB_PASSWORD \
+    --base-url=$MAGENTO_BASE_URL \
+    --admin-firstname=$MAGENTO_APP_ADMIN_FIRSTNAME \
+    --admin-lastname=$MAGENTO_APP_ADMIN_LASTNAME \
+    --admin-email=$MAGENTO_APP_ADMIN_EMAIL \
+    --admin-user=$MAGENTO_APP_ADMIN_USER \
+    --admin-password=$MAGENTO_APP_ADMIN_PASS \
+    --cache-backend=redis \
+    --cache-backend-redis-server=redis \
+    --cache-backend-redis-port=6379 \
+    --cache-backend-redis-db=0 \
+    --page-cache=redis \
+    --page-cache-redis-server=redis \
+    --page-cache-redis-port=6379 \
+    --page-cache-redis-db=1 \
+    --session-save=redis \
+    --session-save-redis-host=redis \
+    --session-save-redis-port=6379 \
+    --session-save-redis-max-concurrency=10 \
+    --session-save-redis-disable-locking=0 \
+    --session-save-redis-break-after-frontend=5 \
+    --session-save-redis-log-level=3 \
+    --session-save-redis-db=2 \
+    --backend-frontname=$MAGENTO_APP_BACKEND_FRONTNAME \
+    --elasticsearch-host=$ELASTICSEARCH_HOST \
+    --elasticsearch-port=$ELASTICSEARCH_PORT \
+    --http-cache-hosts=$VARNISH_HOST:$VARNISH_PORT \
+    --cleanup-database \
+    --no-interaction \
+    
+    --amqp-host=$RABBITMQ_HOST \
+    --amqp-port=5672 \
+    --amqp-ssl=0 \
+    --amqp-user=$RABBITMQ_USER \
+    --amqp-password=$RABBITMQ_PASSWORD \
+    --amqp-virtualhost=$RABBITMQ_VIRTUALHOST \
+
+if [ "$MAGENTO_APP_USE_SAMPLE_DATA" = 1 ]; then
+  if [ ! -d "/var/www/magento/var/composer_home" ]; then
+    cd /var/www/magento/var && mkdir composer_home && cd /var/www/magento
+  fi
+
+  cp ~/.composer/auth.json /var/www/magento/var/composer_home/
+
+  magento sampledata:deploy
+
+  MAGENTO_INSTALL="$MAGENTO_INSTALL --use-sample-data"
+fi
+
+$MAGENTO_INSTALL
+
+if [ "$MAGENTO_APP_DISABLE_TWO_FACTOR_AUTH" = 1 ]; then
+  magento module:disable $(magento module:status | grep TwoFactorAuth)
+fi
+
+magento indexer:reindex
+magento cache:enable
+magento cache:flush
+
+if [ ! -f "./Gruntfile.js" ]; then
+    cp ./Gruntfile.js.sample ./Gruntfile.js
+fi
+
+if [ ! -f "./package.json" ]; then
+    cp ./package.json.sample ./package.json
+fi
+
+npm install
+
+grunt exec && grunt less
+
+echo "Installation is successfully completed"

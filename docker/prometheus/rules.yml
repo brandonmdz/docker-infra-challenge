@@ -1,0 +1,17 @@
+groups:
+  - name: performance_metrics
+    rules:
+      - record: instance:mysql_slow_queries_rate
+        expr: rate(mysql_global_status_slow_queries[5m])
+
+      - record: instance:nginx_active_connections
+        expr: nginx_http_requests_total
+
+      - record: instance:php_fpm_average_response_time
+        expr: rate(php_fpm_request_duration_seconds_sum[5m]) / rate(php_fpm_request_duration_seconds_count[5m])
+
+      - record: instance:redis_memory_usage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes
+
+      - record: instance:elasticsearch_health_status
+        expr: elasticsearch_cluster_health_status{color="green"} * 0 + elasticsearch_cluster_health_status{color="yellow"} * 1 + elasticsearch_cluster_health_status{color="red"} * 2

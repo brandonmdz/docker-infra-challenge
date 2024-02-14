@@ -1,0 +1,111 @@
+FROM php:8.1-fpm
+
+### NodeJS section
+# Env variables for node.js
+ARG PHP_NODE_NPM_HOME=/var/www/.npm
+ARG PHP_NODE_NPM_CONFIG=/var/www/.config
+ENV PHP_NODE_NPM_HOME ${PHP_NODE_NPM_HOME}
+ENV PHP_NODE_NPM_CONFIG ${PHP_NODE_NPM_CONFIG}
+RUN mkdir -p $PHP_NODE_NPM_HOME $PHP_NODE_NPM_CONFIG
+
+# install node.js
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get update \
+  && apt-get install -y \
+    nodejs \
+    fontconfig
+RUN npm install -g grunt
+RUN npm install phantomjs-prebuilt
+
+# Install dependencies
+RUN apt-get update \
+  && apt-get install -y \
+  # dependency for gd
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    zlib1g-dev \
+    libpng-dev \
+  # dependency for intl
+    icu-devtools \
+    libicu-dev \
+  # dependency for xsl
+    libxslt1-dev \
+  # dependency for zip
+    libzip-dev \
+# Additional extensions which are not necessary for magento
+    git \
+    sudo \
+    iputils-ping \
+    vim \
+    telnet \
+    procps \
+    sendmail
+
+RUN docker-php-ext-install \
+  bcmath \
+  intl \
+  pdo_mysql \
+  soap \
+  xsl \
+  zip \
+  sockets \
+  opcache
+
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+  && docker-php-ext-install -j$(nproc) gd \
+  && docker-php-source delete
+
+# Install Xdebug (but don't enable)
+RUN pecl install -o -f redis apcu xdebug \
+    && docker-php-ext-enable redis apcu xdebug
+
+# Get composer installed to /usr/local/bin/composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer.phar
+    #--version=2.1.3
+
+# Add bin files into container
+COPY bin/* /usr/local/bin/
+RUN chmod +x /usr/local/bin/*
+
+ADD etc/apc.ini $PHP_INI_DIR/conf.d/zz-apc.ini
+ADD etc/php.ini $PHP_INI_DIR/conf.d/zz-php.ini
+ADD etc/php-xdebug.ini $PHP_INI_DIR/conf.d/zz-xdebug.ini
+ADD etc/opcache.ini $PHP_INI_DIR/conf.d/zz-opcache.ini
+ADD etc/mail.ini $PHP_INI_DIR/conf.d/zz-mail.ini
+
+RUN chmod -R +rw $PHP_INI_DIR/conf.d
+
+WORKDIR /var/www/magento
+
+ADD docker-entrypoint.sh /docker-entrypoint.sh
+
+RUN ["chmod", "+x", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+ENV MAGENTO_RUN_MODE developer
+ENV UPLOAD_MAX_FILESIZE 64M
+
+ADD etc/php-fpm.conf /usr/local/etc/
+
+ENV PHP_MEMORY_LIMIT 2048M
+ENV PHP_ENABLE_XDEBUG false
+ENV MAGENTO_ROOT /var/www/magento
+ENV DEBUG false
+
+RUN groupadd -g 1000 magento
+RUN useradd --no-log-init -d /home/magento -s /bin/bash -u 1000 -g 1000 magento
+RUN echo "magento:magento" | chpasswd && adduser magento sudo
+
+RUN mkdir -p /home/magento
+RUN mkdir -p /var/www/magento
+RUN mkdir -p /var/www/.composer
+RUN chown -R magento:magento /home/magento
+RUN chown -R magento:magento /var/www/magento
+RUN chown -R magento:magento /var/www/.composer
+RUN chown -R magento:magento $PHP_NODE_NPM_HOME
+RUN chown -R magento:magento $PHP_NODE_NPM_CONFIG
+RUN chown -R magento:magento /usr/local/etc
+
+USER magento
+
+CMD ["php-fpm", "-F"]
