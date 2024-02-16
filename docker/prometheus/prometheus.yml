@@ -39,4 +39,4 @@ scrape_configs:
 
   - job_name: 'varnish'
     static_configs:
-      - targets: ['varnish_exporter:9131']
+      - targets: ['varnish:9131']

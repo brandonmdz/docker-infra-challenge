@@ -2,10 +2,11 @@ version: "3.8"
 services:
   varnish:
     container_name: varnish
-    build:
-      context: ./docker/varnish/
     ports:
-      - 6081:6081
+      - "6081:6081" # Varnish port
+      - "9131:9131" # Exporter port
+    env_file:
+      - ./.env
 
   redis:
     container_name: redis

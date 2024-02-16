@@ -1,17 +1,24 @@
 FROM varnish:7.0
 
-RUN apt update && apt install -y procps
+RUN apt-get update && apt-get install -y \
+        git \
+        golang \
+        procps \
+        supervisor && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN git clone https://github.com/jonnenauha/prometheus_varnish_exporter.git /tmp/prometheus_varnish_exporter && \
+    cd /tmp/prometheus_varnish_exporter && \
+    go build -o /usr/local/bin/prometheus_varnish_exporter
 
 COPY etc/varnish.vcl /etc/varnish/
 COPY bin/docker-entrypoint.sh /docker-entrypoint.sh
 
 RUN chmod +x /docker-entrypoint.sh
 
-ENV VARNISH_CONFIG  /etc/varnish/varnish.vcl
-ENV VARNISH_STORAGE malloc,2048m
-ENV VARNISH_LISTEN  :6081
-ENV VARNISH_MANAGEMENT_LISTEN 127.0.0.1:6082
-EXPOSE 6081
-EXPOSE 6082
+EXPOSE 6081 6082 9131
 
-ENTRYPOINT ["/bin/bash", "/docker-entrypoint.sh"]
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

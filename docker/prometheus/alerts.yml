@@ -71,3 +71,11 @@ groups:
           severity: critical
         annotations:
           summary: "The Redis service is not reachable."
+
+      - alert: VarnishDown
+        expr: varnish_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The Varnish service is not reachable."
