@@ -2,6 +2,8 @@ version: "3.8"
 services:
   varnish:
     container_name: varnish
+    build:
+      context: ./docker/varnish
     ports:
       - "6081:6081" # Varnish port
       - "9131:9131" # Exporter port
@@ -163,7 +165,7 @@ services:
     container_name: mysql_exporter
     image: prom/mysqld-exporter
     command:
-     - "--mysqld.username=${MYSQL_EXPORTER_CREDENTIALS}"
+     - "--mysqld.username=${MYSQL_EXPORTER_PASSWORD}"
      - "--mysqld.address=mysql:3306"
      - '--collect.info_schema.query_response_time'
     ports:

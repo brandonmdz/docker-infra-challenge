@@ -20,5 +20,13 @@ RUN chmod +x /docker-entrypoint.sh
 EXPOSE 6081 6082 9131
 
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN mkdir -p /var/lib/varnish/varnishd /etc/varnish && \
+    touch /etc/varnish/supervisord.log && \
+    chown -R varnish:varnish /var/lib/varnish/varnishd /etc/varnish
+
+COPY /bin/run-varnish.sh /usr/local/bin/run-varnish.sh 
+RUN chmod +x /usr/local/bin/run-varnish.sh 
+
+USER varnish
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
