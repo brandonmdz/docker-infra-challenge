@@ -50,6 +50,8 @@ services:
       - ./magento:/var/www/magento
     env_file:
       - ./.env
+    depends_on:
+    - magento
 
   magento:
     container_name: magento

@@ -44,13 +44,13 @@ if [ -f "$CERT_FILE" ] || [ -f "$KEY_FILE" ]; then
     echo "Certificates already exist. Do you want to replace them? (yes/no)"
     read REPLACE_CERTS
     if [ "$REPLACE_CERTS" = "yes" ]; then
-        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "$KEY_FILE" -out "$CERT_FILE" -subj "/CN=magento.local/O=Magento Dev/C=US"
+        openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "$KEY_FILE" -out "$CERT_FILE" -subj "/CN=docker.infra.challenge/O=Magento Dev/C=US"
         print_status "Nginx certificates" "were replaced successfully at ${SSL_CERT_DIR}."
     else
         print_status "Nginx certificates" "were not replaced."
     fi
 else
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "$KEY_FILE" -out "$CERT_FILE" -subj "/CN=magento.local/O=Magento Dev/C=US"
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "$KEY_FILE" -out "$CERT_FILE" -subj "/CN=docker.infra.challenge/O=Magento Dev/C=US"
     print_status "Nginx certificates" "were generated successfully at ${SSL_CERT_DIR}."
 fi
 
