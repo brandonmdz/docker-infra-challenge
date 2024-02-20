@@ -165,7 +165,7 @@ services:
     container_name: mysql_exporter
     image: prom/mysqld-exporter
     command:
-     - "--mysqld.username=${MYSQL_EXPORTER_PASSWORD}"
+     - "--mysqld.username=${MYSQLD_EXPORTER_USER}"
      - "--mysqld.address=mysql:3306"
      - '--collect.info_schema.query_response_time'
     ports:
