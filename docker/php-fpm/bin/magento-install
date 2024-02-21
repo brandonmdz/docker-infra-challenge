@@ -51,7 +51,7 @@ MAGENTO_INSTALL="magento setup:install \
     --amqp-ssl=0 \
     --amqp-user=$RABBITMQ_USER \
     --amqp-password=$RABBITMQ_PASSWORD \
-    --amqp-virtualhost=$RABBITMQ_VIRTUALHOST \
+    --amqp-virtualhost=$RABBITMQ_VIRTUALHOST"
 
 if [ "$MAGENTO_APP_USE_SAMPLE_DATA" = 1 ]; then
   if [ ! -d "/var/www/magento/var/composer_home" ]; then

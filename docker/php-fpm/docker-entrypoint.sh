@@ -56,5 +56,7 @@ sed -i "s|{{PHP_XDEBUG_IDEKEY}}|${PHP_XDEBUG_IDEKEY}|g" $PHP_INI_DIR/conf.d/zz-x
 # Configure PHP-FPM
 [ ! -z "${MAGENTO_RUN_MODE}" ] && sed -i "s/!MAGENTO_RUN_MODE!/${MAGENTO_RUN_MODE}/" /usr/local/etc/php-fpm.conf
 
+chown -R magento:magento /home/magento/.composer
+
 exec "$@"
 

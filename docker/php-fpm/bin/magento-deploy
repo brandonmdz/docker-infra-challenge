@@ -36,7 +36,7 @@ MAGENTO_DEPLOY="magento setup:config:set -s -n \
     --amqp-ssl=0 \
     --amqp-user=$RABBITMQ_USER \
     --amqp-password=$RABBITMQ_PASSWORD \
-    --amqp-virtualhost=$RABBITMQ_VIRTUALHOST \
+    --amqp-virtualhost=$RABBITMQ_VIRTUALHOST"
 
 $MAGENTO_DEPLOY
 
