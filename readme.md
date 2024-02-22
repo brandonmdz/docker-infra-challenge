@@ -1,3 +1,6 @@
+# Docker-infra-challenge
+
+This project sets up a scalable Docker Compose infrastructure for running a Magento 2.4 instance, featuring MySQL, PHP-FPM, NGINX, Varnish Cache, Redis, Elasticsearch, RabbitMQ, Prometheus, Alert Manager, and Grafana. It focuses on performance monitoring and persistent data, with configured alerts for system health. You can see more details about the requirements for this challenge in the **docker-infra-challenge.txt** file.
 
 ## Quick Start
 
