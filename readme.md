@@ -9,12 +9,17 @@ This project sets up a scalable Docker Compose infrastructure for running a Mage
 2. Elasticsearch Optimizacion
 3. Domain Mapping
 4. Building Magento
-5. Magento Container Access
-6. Set Slack notifications
+5. Mysql Exporter user
+6. Slack notifications
 
 ####  ===== 1. Environment Setup
 
- Update env.dist with the credentials you want to use and composer.env.sample and add your keys from [this link.](https://commercemarketplace.adobe.com/customer/accessKeys/ "this link.")
+ Update **env.dist** with your credentials, make sure to set the **mysql,grafana,rabbitmq,magento and mysql exporter** credentials after continue.
+ 
+Complete the **composer.env.sample** too, add your keys from [this link.](https://commercemarketplace.adobe.com/customer/accessKeys/ "this link.")
+
+> COMPOSER_MAGENTO_USERNAME=your-public-key
+COMPOSER_MAGENTO_PASSWORD=your-private-key
 
 Now run the script **setup-env.sh** in the root directory, this script creates our .env and composer.env files from the templates, generates the SSL certificates for nginx (and if you already have certificates, you have the option to remplace it with new ones), update the UID and GID in the dockerfiles to match with the host user and create the magento folder.
 
@@ -40,23 +45,23 @@ So you can access via [https://docker.infra.challenge/](https://docker.infra.cha
 
 ####  ===== 4. Building Magento
 
-We start the infraestructure 
+Run docker compose up -d to launch all services in detached mode.
 ```shell
 docker compose up -d
 ```
 
-Now we enter to the Magento container with the user magento
+Enter the Magento container as magento user with:
 
 ```shell
 docker compose -f docker-compose.yml exec --user=magento magento bash 
 ```
 
-And run this from the container
+Inside the container, initiate a Magento project using:
 
 ```shell
 composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition .
 ```
-Now to install magento run this in the magento container
+And now run the provided scripts to build and install Magento, completing the setup process:
 
 ```shell
 magento-build && magento-install
@@ -64,16 +69,18 @@ magento-build && magento-install
 
 ####  ===== 5. Set Mysql Exporter user
 
-   Get into mysql container with
+Enter the MySQL container using this Docker command:
+
    ```shell
 	docker exec -it mysql /bin/bash 
 ```
 
-and into mysql with:
+Use the MySQL client command to log in as the root user: 
    ```shell
 	mysql -u root -p
 ```
-create user with:
+Create a new user dedicated to monitoring. Set a password (as specified in your env.dist file):
+
    ```shell
  CREATE USER 'exporter'@'%' IDENTIFIED BY 'your-password-in-env.dist' WITH MAX_USER_CONNECTIONS 3;
 ```
@@ -82,14 +89,11 @@ create user with:
 ```
 **  NOTE: It is recommended to set a max connection limit for the user to avoid overloading the server with monitoring scrapes under heavy load.**
 
-Now we need to edit the file my.cnf in the folder /docker/mysql_exporter/my.cnf
-
 we gonna reset both containers for this changes takes effects:
    ```shell
 docker compose restart mysql mysql_exporter
 ```
-And thats all, with that we have running our magento infraestructure with the monitoring. We can access to [https://docker.infra.challenge:3000](https://docker.infra.challenge:3000 "https://docker.infra.challenge:3000") (or another domain you put in the env.dist file of course) to enter to grafana and see the dashboards
-
+With these steps completed, our Magento infrastructure is now up and running with monitoring capabilities.You can access Grafana to view the dashboards by navigating to https://docker.infra.challenge:3000(or to another domain specified in your env.dist file).
 
 ###  ===== 6. Slack notifications
 
