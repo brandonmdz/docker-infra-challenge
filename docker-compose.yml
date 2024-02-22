@@ -172,6 +172,8 @@ services:
       - '9104:9104'
     depends_on:
       - mysql
+    env_file:
+      - ./.env
 
   nginx_exporter:
     container_name: nginx_exporter
