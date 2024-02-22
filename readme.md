@@ -1,8 +1,4 @@
 
-# Docker-infra-challenge
-
-This project sets up a scalable Docker Compose infrastructure for running a Magento 2.4 instance, featuring MySQL, PHP-FPM, NGINX, Varnish Cache, Redis, Elasticsearch, RabbitMQ, Prometheus, Alert Manager, and Grafana. It focuses on performance monitoring and persistent data, with configured alerts for system health. You can see more details about the requirements for this challenge in the **docker-infra-challenge.txt** file.
-
 ## Quick Start
 
 1. Environment Setup
@@ -12,7 +8,7 @@ This project sets up a scalable Docker Compose infrastructure for running a Mage
 5. Mysql Exporter user
 6. Slack notifications
 
-## ####  ===== 1. Environment Setup
+##  ===== 1. Environment Setup
 
  Update **env.dist** with your credentials, make sure to set the **mysql,grafana,rabbitmq,magento and mysql exporter** credentials after continue.
  
@@ -29,14 +25,14 @@ Now run the script **setup-env.sh** in the root directory, this script creates o
 sh setup-env.sh
 ```
 
-## ####  ===== 2. ElasticSearch Optimization
+##  ===== 2. ElasticSearch Optimization
 
 ```shell
 sudo sysctl -w vm.max_map_count=262144
 ```
 This command boosts elasticsearch performance by allowing more memory-mapped files, crucial for handling large 	datasets efficiently. I recommend you to execute this command before continue.
 
-## ####  ===== 3. Domain Mapping
+## ===== 3. Domain Mapping
  
  Add the domain docker.infra.challenge(or the domain of your choise) to your hosts file.
 
@@ -45,7 +41,7 @@ This command boosts elasticsearch performance by allowing more memory-mapped fil
 ```
 So you can access via [https://docker.infra.challenge/](https://docker.infra.challenge/ "https://docker.infra.challenge/")
 
-## ####  ===== 4. Building Magento
+##  ===== 4. Building Magento
 
 Run docker compose up -d to launch all services in detached mode.
 ```shell
@@ -69,7 +65,7 @@ And now run the provided scripts to build and install Magento, completing the se
 magento-build && magento-install
 ```
 
-## ####  ===== 5. Set Mysql Exporter user
+## ===== 5. Set Mysql Exporter user
 
 Enter the MySQL container using this Docker command:
 
@@ -97,7 +93,7 @@ docker compose restart mysql mysql_exporter
 ```
 With these steps completed, our Magento infrastructure is now up and running with monitoring capabilities.You can access Grafana to view the dashboards by navigating to https://docker.infra.challenge:3000(or to another domain specified in your env.dist file).
 
-## ###  ===== 6. Slack notifications
+## ===== 6. Slack notifications
 
 To set the slack notifications you need a Slack Workspace. You can quickly create one [here.](https://slack.com/create "here.")
 
