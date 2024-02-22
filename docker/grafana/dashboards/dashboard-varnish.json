@@ -354,7 +354,7 @@
           "tableColumn": "__name__",
           "targets": [
             {
-              "expr": "min(varnish_main_uptime{instance=~\"^($varnish_instance).*\"})",
+              "expr": "rate(varnish_main_uptime{instance=~\"^($varnish_instance).*\"}[5m])",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",

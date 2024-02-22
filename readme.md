@@ -51,6 +51,12 @@ Run docker compose up -d to launch all services in detached mode.
 docker compose up -d
 ```
 
+Before accessing the Magento container, ensure to give the necessary permissions on the folder .composer by running the following command:
+
+```shell
+sudo chown -R 1000:1000 ./docker/volume/.composer
+```
+
 Enter the Magento container as magento user with:
 
 ```shell
