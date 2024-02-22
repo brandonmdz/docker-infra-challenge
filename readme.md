@@ -12,14 +12,16 @@ This project sets up a scalable Docker Compose infrastructure for running a Mage
 5. Mysql Exporter user
 6. Slack notifications
 
-####  ===== 1. Environment Setup
+## ####  ===== 1. Environment Setup
 
  Update **env.dist** with your credentials, make sure to set the **mysql,grafana,rabbitmq,magento and mysql exporter** credentials after continue.
  
 Complete the **composer.env.sample** too, add your keys from [this link.](https://commercemarketplace.adobe.com/customer/accessKeys/ "this link.")
 
-> COMPOSER_MAGENTO_USERNAME=your-public-key
+```shell
+COMPOSER_MAGENTO_USERNAME=your-public-key
 COMPOSER_MAGENTO_PASSWORD=your-private-key
+```
 
 Now run the script **setup-env.sh** in the root directory, this script creates our .env and composer.env files from the templates, generates the SSL certificates for nginx (and if you already have certificates, you have the option to remplace it with new ones), update the UID and GID in the dockerfiles to match with the host user and create the magento folder.
 
@@ -27,14 +29,14 @@ Now run the script **setup-env.sh** in the root directory, this script creates o
 sh setup-env.sh
 ```
 
-####  ===== 2. ElasticSearch Optimization
+## ####  ===== 2. ElasticSearch Optimization
 
 ```shell
 sudo sysctl -w vm.max_map_count=262144
 ```
 This command boosts elasticsearch performance by allowing more memory-mapped files, crucial for handling large 	datasets efficiently. I recommend you to execute this command before continue.
 
-####  ===== 3. Domain Mapping
+## ####  ===== 3. Domain Mapping
  
  Add the domain docker.infra.challenge(or the domain of your choise) to your hosts file.
 
@@ -43,7 +45,7 @@ This command boosts elasticsearch performance by allowing more memory-mapped fil
 ```
 So you can access via [https://docker.infra.challenge/](https://docker.infra.challenge/ "https://docker.infra.challenge/")
 
-####  ===== 4. Building Magento
+## ####  ===== 4. Building Magento
 
 Run docker compose up -d to launch all services in detached mode.
 ```shell
@@ -67,7 +69,7 @@ And now run the provided scripts to build and install Magento, completing the se
 magento-build && magento-install
 ```
 
-####  ===== 5. Set Mysql Exporter user
+## ####  ===== 5. Set Mysql Exporter user
 
 Enter the MySQL container using this Docker command:
 
@@ -95,7 +97,7 @@ docker compose restart mysql mysql_exporter
 ```
 With these steps completed, our Magento infrastructure is now up and running with monitoring capabilities.You can access Grafana to view the dashboards by navigating to https://docker.infra.challenge:3000(or to another domain specified in your env.dist file).
 
-###  ===== 6. Slack notifications
+## ###  ===== 6. Slack notifications
 
 To set the slack notifications you need a Slack Workspace. You can quickly create one [here.](https://slack.com/create "here.")
 
@@ -108,11 +110,13 @@ Next, specify in which channel you like to receive notifications from Alertmanag
 
 Now you need to paste your slack api url in the alertmanager.yml file located in /docker/alertmanager/alertmanager.yml:
 
-> global:
+   ```shell
+global:
   resolve_timeout: 1m
   slack_api_url: 'https://hooks.slack.com/services/rest/of/your/url' #change this url
+```
 
-and restart the Alertmanager service
+and restart the Alertmanager service:
    ```shell
 docker compose build alertmanager
 ```
@@ -124,14 +128,14 @@ docker compose up -d --force-recreate alertmanager
 
 You can also set up alertmanager.yml to send the alerts trought Gmail with this configuration
 
-
->global:
+  ```shell
+global:
   resolve_timeout: 1m
 
->route:
+route:
   receiver: 'gmail-notifications'
 
->receivers:
+receivers:
 - name: 'gmail-notifications'
   email_configs:
   - to: monitoringinstances@gmail.com
@@ -141,6 +145,6 @@ You can also set up alertmanager.yml to send the alerts trought Gmail with this 
     auth_identity: monitoringinstances@gmail.com
     auth_password: password
     send_resolved: true
-
+```
 
 For more information about the integrations of the alerts you can visit this [link.](https://grafana.com/blog/2020/02/25/step-by-step-guide-to-setting-up-prometheus-alertmanager-with-slack-pagerduty-and-gmail/ "link.")
