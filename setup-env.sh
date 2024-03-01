@@ -64,4 +64,18 @@ print_status "UID=${CURRENT_UID}, GID=${CURRENT_GID}" "have been updated for php
 
 # 4. Create Magento folder
 mkdir -p magento
-print_status "Magento folder" "has been created successfully."
+mkdir -p ./docker/volume/.composer
+print_status "Magento and composer folders" "has been created successfully."
+
+# 5. Configure Slack URL in Alertmanager configuration
+SLACK_API_URL=$(grep -oP 'SLACK_API_URL=\K.+' ".env")
+
+if [ -z "$SLACK_API_URL" ]; then
+  print_error "SLACK_API_URL" "is not defined in .env. Please define it and rerun the script."
+else
+  ALERTMANAGER_CONFIG="docker/alertmanager/alertmanager.yml"
+  
+  sed -i "s|slack_api_url:.*|slack_api_url: '$SLACK_API_URL'|g" "$ALERTMANAGER_CONFIG"
+
+  print_status "$ALERTMANAGER_CONFIG" "was updated successfully with Slack URL."
+fi
