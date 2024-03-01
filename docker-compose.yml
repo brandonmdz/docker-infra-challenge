@@ -84,7 +84,9 @@ services:
       - MYSQL_DATABASE=${DB_DATABASE}
       - MYSQL_USER=${DB_USER}
       - MYSQL_PASSWORD=${DB_PASSWORD}
-
+    env_file:
+      - ./.env
+    
   magento_cli:
     container_name: magento_cli
     build:
