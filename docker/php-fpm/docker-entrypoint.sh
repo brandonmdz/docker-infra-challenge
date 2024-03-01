@@ -58,5 +58,15 @@ sed -i "s|{{PHP_XDEBUG_IDEKEY}}|${PHP_XDEBUG_IDEKEY}|g" $PHP_INI_DIR/conf.d/zz-x
 
 chown -R magento:magento /home/magento/.composer
 
+# Check if Magento is installed
+if [ ! -f "$MAGENTO_ROOT/app/etc/env.php" ]; then
+    echo "Magento is not installed. Starting the installation..."
+    composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition .
+    /usr/local/bin/magento-build
+    /usr/local/bin/magento-install
+else
+    echo "Magento is already installed."
+fi
+
 exec "$@"
 
