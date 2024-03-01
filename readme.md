@@ -8,7 +8,6 @@ This project sets up a scalable Docker Compose infrastructure for running a Mage
 2. Elasticsearch Optimizacion
 3. Domain Mapping
 4. Run infra
-5. Slack notifications
 
 ##  ===== 1. Environment Setup
 
